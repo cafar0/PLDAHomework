@@ -1,6 +1,8 @@
 package parser
 
 import parser.internal._
+
+import scala.collection.immutable.HashMap
 import scala.util.parsing.combinator.JavaTokenParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
@@ -37,7 +39,7 @@ class LanguageParser extends JavaTokenParsers {
 
   def statement: Parser[Statement] =
     for {
-      statement <- variableAssignment | ifStatement | outStatement
+      statement <- variableAssignment | ifStatement | outStatement | functionCall
     } yield statement
 
   //Functions
@@ -66,18 +68,18 @@ class LanguageParser extends JavaTokenParsers {
     } yield new FunctionTerm(partialFunction, e)
   }
 
-  def argument: Parser[Map[String, Int]] = {
+  def argument: Parser[HashMap[String, Int]] = {
     for {
       argument <- ident
-    } yield  Map[String, Int](argument -> 0)
+    } yield  HashMap[String, Int](argument -> 0)
   }
 
-  def twoArguments: Parser[Map[String, Int]] = {
+  def twoArguments: Parser[HashMap[String, Int]] = {
     for {
       argument1 <- ident
       _ <- literal(",")
       argument2 <- ident
-    } yield  Map[String, Int](argument1 -> 0, argument2 -> 0)
+    } yield  HashMap[String, Int](argument1 -> 0, argument2 -> 0)
   }
 
   //Function call
@@ -85,25 +87,25 @@ class LanguageParser extends JavaTokenParsers {
     for {
       funcName <- ident
       _ <- literal("(")
-      args <- twoFucntionArguments | functionArgument
+      args <- twoFunctionArguments | functionArgument
       _ <- literal(")")
     } yield new FunctionCall(funcName, args)
   }
 
-  def functionArgument: Parser[Map[String, Expr]] = {
+  def functionArgument: Parser[HashMap[String, Expr]] = {
     for {
       name <- ident
       _ <- literal("=")
       value <- expr
-    } yield Map(name -> value)
+    } yield HashMap(name -> value)
   }
 
-    def twoFucntionArguments: Parser[Map[String, Expr]] = {
+    def twoFunctionArguments: Parser[HashMap[String, Expr]] = {
       for {
         firstArg <- functionArgument
         _ <- literal(",")
         secondArg <- functionArgument
-      } yield  Map(firstArg.head._1 -> firstArg.head._2, secondArg.head._1 -> secondArg.head._2)
+      } yield  HashMap(firstArg.head._1 -> firstArg.head._2, secondArg.head._1 -> secondArg.head._2)
   }
 
   //Print Function
@@ -121,7 +123,7 @@ class LanguageParser extends JavaTokenParsers {
       _ <- literal("let")
       name <- ident
       _ <- literal("=")
-      value <- expr
+      value <- functionCall | expr
     } yield new VariableDefinition(name, value)
   }
 

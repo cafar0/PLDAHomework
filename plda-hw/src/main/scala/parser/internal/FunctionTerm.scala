@@ -1,8 +1,10 @@
 package parser.internal
 
-class FunctionTerm(val name: String, val arguments: Map[String, Int], val statements: List[Statement], val returnedValue: Expr) {
+import scala.collection.immutable.HashMap
 
-  def this(name: String, arguments: Map[String, Int], statements: List[Statement]) {
+class FunctionTerm(val name: String, val arguments: HashMap[String, Int], val statements: List[Statement], val returnedValue: Expr) {
+
+  def this(name: String, arguments: HashMap[String, Int], statements: List[Statement]) {
     this(name, arguments, statements, null)
   }
 

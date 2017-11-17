@@ -13,6 +13,8 @@ class InterpreterTest extends FlatSpec {
     interpreter.run()
     return interpreter
   }
+    case parser.Error(msg, n) => println("Error: " + msg)
+    case parser.Failure(msg, n) => println("Error: " + msg)
     case _ => fail()
   }
     fail()
@@ -70,6 +72,60 @@ class InterpreterTest extends FlatSpec {
     assert(a == Number(4))
   }
 
+  it should "allow me to do this. hopefully" in {
+    val input =
+      """|func max(a, b)
+         |if (a < b) ? let r = a : let r = b
+         |return a
+         |
+         |main :
+         |let d = max( a=3, b=4 )
+         |println d
+      """.stripMargin
+    val interpreter = runInterpreter(input)
+    val d = interpreter.getVariable(Identifier("d"), interpreter.testScope)
+    assert(d == Number(3))
+  }
 
+  it should "getting really ambitious. hopefully" in {
+    val input =
+      """|func max(a, b)
+         |if (a < b) ? let r = a : let r = b
+         |return a
+         |
+         |func min(y, u)
+         |if(y < u) ? let o = y : let o = u
+         |return y
+         |
+         |main :
+         |let d = min (y=4, u=9)
+         |let n = max (a=4, b=9)
+         |println d + n
+      """.stripMargin
+    val interpreter = runInterpreter(input)
+    val d = interpreter.getVariable(Identifier("d"), interpreter.testScope)
+    assert(d == Number(5))
+  }
+
+  it should "pass this to be recursive" in {
+    val input =
+      """|func max(a)
+         |println a
+         |if(a < 5) ?  max(a = 6) : let b = 4
+         |println a + 1
+         |return a
+         |
+         |
+         |func min(y, u)
+         |if(y < u) ? max(a = 2) : let o = u
+         |return y
+         |
+         |main :
+         |let d = max(a=2)
+      """.stripMargin
+    val interpreter = runInterpreter(input)
+    val d = interpreter.getVariable(Identifier("d"), interpreter.testScope)
+    assert(d == Number(2))
+  }
 
 }

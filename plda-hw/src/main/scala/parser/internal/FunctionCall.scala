@@ -1,3 +1,5 @@
 package parser.internal
 
-case class FunctionCall(name: String, value: Map[String, Expr]) extends Expr with Statement
+import scala.collection.immutable.HashMap
+
+case class FunctionCall(name: String, values: HashMap[String, Expr]) extends Expr with Statement
