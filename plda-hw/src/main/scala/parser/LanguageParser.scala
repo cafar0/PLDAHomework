@@ -10,6 +10,20 @@ class LanguageParser extends JavaTokenParsers {
 
   def program: Parser[Program] = {
     for {
+      program <- programWithFunc | programWithoutFunc
+    } yield  program
+  }
+
+  def programWithFunc: Parser[Program] = {
+    for {
+      functions <- rep(function)
+      _ <- literal("main :")
+      block <- codeblock
+    } yield new Program(functions, block)
+  }
+
+  def programWithoutFunc: Parser[Program] = {
+    for {
       _ <- literal("main :")
       block <- codeblock
     } yield new Program(block)
@@ -25,6 +39,72 @@ class LanguageParser extends JavaTokenParsers {
     for {
       statement <- variableAssignment | ifStatement | outStatement
     } yield statement
+
+  //Functions
+  def function: Parser[FunctionTerm] = {
+    for {
+      func <- functionWithReturn | functionWithoutReturn
+    } yield func
+  }
+
+  def functionWithoutReturn: Parser[FunctionTerm] = {
+    for {
+      _ <- literal("func")
+      name <- ident
+      _ <- literal("(")
+      arguments <- twoArguments | argument
+      _ <- literal(")")
+      block <- codeblock
+    } yield new FunctionTerm(name, arguments,block)
+  }
+
+  def functionWithReturn: Parser[FunctionTerm] = {
+    for {
+      partialFunction <- functionWithoutReturn
+      _ <- literal("return")
+      e <- expr
+    } yield new FunctionTerm(partialFunction, e)
+  }
+
+  def argument: Parser[Map[String, Int]] = {
+    for {
+      argument <- ident
+    } yield  Map[String, Int](argument -> 0)
+  }
+
+  def twoArguments: Parser[Map[String, Int]] = {
+    for {
+      argument1 <- ident
+      _ <- literal(",")
+      argument2 <- ident
+    } yield  Map[String, Int](argument1 -> 0, argument2 -> 0)
+  }
+
+  //Function call
+  def functionCall: Parser[FunctionCall] = {
+    for {
+      funcName <- ident
+      _ <- literal("(")
+      args <- twoFucntionArguments | functionArgument
+      _ <- literal(")")
+    } yield new FunctionCall(funcName, args)
+  }
+
+  def functionArgument: Parser[Map[String, Expr]] = {
+    for {
+      name <- ident
+      _ <- literal("=")
+      value <- expr
+    } yield Map(name -> value)
+  }
+
+    def twoFucntionArguments: Parser[Map[String, Expr]] = {
+      for {
+        firstArg <- functionArgument
+        _ <- literal(",")
+        secondArg <- functionArgument
+      } yield  Map(firstArg.head._1 -> firstArg.head._2, secondArg.head._1 -> secondArg.head._2)
+  }
 
   //Print Function
   def outStatement: Parser[PrintStatement] = {

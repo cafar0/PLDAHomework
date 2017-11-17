@@ -1,3 +1,8 @@
 package parser.internal
 
-class Program(val statements: List[Statement])
+class Program(val functions: List[FunctionTerm], val statements: List[Statement]) {
+
+  def this(statements: List[Statement]) = {
+    this(null, statements)
+  }
+}
