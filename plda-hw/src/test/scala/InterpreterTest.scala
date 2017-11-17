@@ -23,7 +23,7 @@ class InterpreterTest extends FlatSpec {
                    |let a = 5
                 """.stripMargin
     val interpreter = runInterpreter(input)
-    val a = interpreter.getVariable(Identifier("a"))
+    val a = interpreter.getVariable(Identifier("a"), interpreter.testScope)
     assert(a == Number(5))
     }
 
@@ -33,7 +33,7 @@ class InterpreterTest extends FlatSpec {
          |let a = 2 + 2
       """.stripMargin
     val interpreter = runInterpreter(input)
-    val a = interpreter.getVariable(Identifier("a"))
+    val a = interpreter.getVariable(Identifier("a"), interpreter.testScope)
     assert(a == Operator("+", Number(2), Number(2)))
   }
 
@@ -45,7 +45,7 @@ class InterpreterTest extends FlatSpec {
          |if (b == 6) ? let c = 1 : let c = 0
       """.stripMargin
     val interpreter = runInterpreter(input)
-    val c = interpreter.getVariable(Identifier("c"))
+    val c = interpreter.getVariable(Identifier("c"), interpreter.testScope)
     assert(c == Number(1))
   }
 
@@ -56,7 +56,7 @@ class InterpreterTest extends FlatSpec {
          |if(2 < 3) ? let a = 3 : let b = 4
       """.stripMargin
     val interpreter = runInterpreter(input)
-    val a = interpreter.getVariable(Identifier("a"))
+    val a = interpreter.getVariable(Identifier("a"), interpreter.testScope)
     assert(a == Number(3))
   }
 
@@ -66,7 +66,7 @@ class InterpreterTest extends FlatSpec {
          |if(2 > 3) ? let a = 3 : let b = 4
       """.stripMargin
     val interpreter = runInterpreter(input)
-    val a = interpreter.getVariable(Identifier("b"))
+    val a = interpreter.getVariable(Identifier("b"), interpreter.testScope)
     assert(a == Number(4))
   }
 

@@ -28,7 +28,7 @@ object HWMain {
 
         try {
           interpreter.run()
-          val a = interpreter.getVariable(Identifier("a"))
+          val a = interpreter.getVariable(Identifier("a"), interpreter.testScope)
           print("result : " + a)
         } catch {
           case e: RuntimeException => println(e.getMessage)

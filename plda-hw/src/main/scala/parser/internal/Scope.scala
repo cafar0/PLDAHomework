@@ -1,7 +1,9 @@
 package parser.internal
 
-import scala.collection.mutable
+import scala.collection.immutable.HashMap
 
-class Scope(val name: String, val parentScope: Scope) {
-  var variables = new mutable.HashMap[String, Expr]()
+
+class Scope() {
+  val variables = new HashMap[String, Expr]()
+  /*, val functions: HashMap[String, ???]*/
 }

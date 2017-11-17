@@ -3,21 +3,22 @@ package interpreter
 import parser._
 import parser.internal._
 
+import scala.collection.immutable.HashMap
+
 
 class Interpreter(program: Program) {
-  var currentScope = new Scope("global", null)
+  type Scope = HashMap[String, Expr]
+  var testScope = new HashMap[String, Expr]()
+  val currentScope = new HashMap[String, Expr]()
 
   def run(): Unit = {
-    walk(program.statements)
+    walk(program.statements, currentScope)
   }
 
 
-  def getVariable(ident: Identifier): Expr = {
-    var s: Scope = currentScope
+  def getVariable(ident: Identifier, scope: Scope): Expr = {
 
-    while ((!s.name.equals("global")) && !s.variables.contains(ident.name)) s = s.parentScope
-
-    if (s.variables.contains(ident.name)) s.variables(ident.name)
+    if (scope.contains(ident.name)) scope(ident.name)
     else {
       sys.error("Error: Undefined variable " + ident.name +
         " at position [" +
@@ -26,42 +27,45 @@ class Interpreter(program: Program) {
     }
   }
 
-  def printStatemnet(value: Expr) = {
-    println(calculateExpression(value))
+  def printStatemnet(value: Expr, scope: Scope): Unit = {
+    println(calculateExpression(value,scope))
   }
 
-  def calculateExpression(expr: Expr): Int = {
+  def calculateExpression(expr: Expr, scope: Scope): Int = {
     expr match {
       case Number(value) => value
       case Identifier(_) => {
-        calculateExpression(getVariable(expr.asInstanceOf[Identifier]))
+        calculateExpression(getVariable(expr.asInstanceOf[Identifier], scope), scope)
       }
       case Operator(op, left, right) => {
         op match {
-          case "*" => calculateExpression(left) * calculateExpression(right)
-          case "/" => calculateExpression(left) / calculateExpression(right)
-          case "%" => calculateExpression(left) % calculateExpression(right)
-          case "+" => calculateExpression(left) + calculateExpression(right)
-          case "-" => calculateExpression(left) - calculateExpression(right)
+          case "*" => calculateExpression(left,scope) * calculateExpression(right,scope)
+          case "/" => calculateExpression(left,scope) / calculateExpression(right,scope)
+          case "%" => calculateExpression(left,scope) % calculateExpression(right,scope)
+          case "+" => calculateExpression(left,scope) + calculateExpression(right,scope)
+          case "-" => calculateExpression(left,scope) - calculateExpression(right,scope)
         }
       }
     }
   }
 
-  def evaluateVariableDefinition(name: String, value: Expr): Unit = {
-    currentScope.variables(name) = value
+  def evaluateVariableDefinition(name: String, value: Expr, scope: Scope): Scope = {
+    val scope1 =  scope + (name -> value)
+    this.testScope = scope1
+    scope1
+//    currentScope.variables(name) = value
   }
 
-  def evaluateIfStatement(cond: Condition, left: List[Statement], right: List[Statement]): Unit = {
-    if (isConditionTrue(cond))
-      walk(left)
+  def evaluateIfStatement(cond: Condition, left: List[Statement], right: List[Statement], scope: Scope): Unit = {
+    if (isConditionTrue(cond, scope))
+      walk(left, scope)
     else
-      walk(right)
+      walk(right, scope)
   }
 
-  def isConditionTrue(cond: Condition): Boolean = {
-    val a = calculateExpression(cond.left)
-    val b = calculateExpression(cond.right)
+  def isConditionTrue(cond: Condition, scope: Scope): Boolean = {
+    val a = calculateExpression(cond.left, scope)
+    val b = calculateExpression(cond.right, scope)
 
     cond.op match {
       case "==" => (a == b)
@@ -73,15 +77,14 @@ class Interpreter(program: Program) {
     }
   }
 
-  def walk(tree: List[Statement]): Unit = {
+  def walk(tree: List[Statement], scope: Scope): Unit = {
     if (!tree.isEmpty) {
       tree.head match {
-        case VariableDefinition(name, value) => evaluateVariableDefinition(name, value)
-                                                walk(tree.tail)
-        case IfStatement(condition, trueBranch, falseBranch) => evaluateIfStatement(condition, trueBranch, falseBranch)
-                                                                walk(tree.tail)
-        case PrintStatement(value) => printStatemnet(value)
-                                      walk(tree.tail)
+        case VariableDefinition(name, value) => walk(tree.tail, evaluateVariableDefinition(name, value, scope))
+        case IfStatement(condition, trueBranch, falseBranch) => evaluateIfStatement(condition, trueBranch, falseBranch, scope)
+                                                                walk(tree.tail, scope)
+        case PrintStatement(value) => printStatemnet(value, scope)
+                                      walk(tree.tail, scope)
       }
     }
   }
